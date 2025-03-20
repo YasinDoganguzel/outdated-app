@@ -1,0 +1,46 @@
+name: Dependency Audit
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # Her Pazartesi çalıştır
+  workflow_dispatch:  # Manuel olarak da çalıştırılabilir
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Depoyu Kopyala
+        uses: actions/checkout@v4
+
+      - name: Node.js Kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Bağımlılıkları Kur
+        run: npm ci
+
+      - name: Bağımlılık Güvenlik Taraması
+        run: npm audit --json > security-audit.json
+
+      - name: Gereksiz Bağımlılıkları Kontrol Et
+        run: |
+          npm install -g depcheck
+          depcheck --json > unused-deps.json
+
+      - name: Raporu Hazırla
+        run: |
+          echo "# Dependency Audit Report $(date)" > report.md
+          echo "## Unused Dependencies" >> report.md
+          cat unused-deps.json | jq -r '.dependencies[]' >> report.md
+          echo "## Security Issues" >> report.md
+          cat security-audit.json | jq '.metadata.vulnerabilities' >> report.md
+
+      - name: Sorun Varsa GitHub Issue Aç
+        uses: peter-evans/create-issue-from-file@v4
+        if: ${{ success() }}
+        with:
+          title: Weekly Dependency Audit
+          content-filepath: ./report.md
+          labels: maintenance, dependencies

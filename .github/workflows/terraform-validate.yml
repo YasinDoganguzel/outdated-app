@@ -1,0 +1,39 @@
+name: Terraform Validate
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Depoyu Kopyala
+        uses: actions/checkout@v4
+
+      - name: Terraform Kur
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Format Kontrolü
+        run: terraform fmt -check
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Hata Varsa GitHub Issue Aç
+        if: failure()
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: Terraform Validation Failed
+          content-filepath: ./terraform-errors.md
+          labels: infrastructure, bug
