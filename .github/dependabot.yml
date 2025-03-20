@@ -1,6 +1,7 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: "npm"  # Or "terraform" if checking Terraform dependencies
+    directory: "/"  # Adjust if your package.json is inside a subfolder
     schedule:
-      interval: "daily"
+      interval: "daily"  # Or "weekly"
+    open-pull-requests-limit: 10
